@@ -1,12 +1,48 @@
 # Nexurf
 
-Nexurf is an agent-native web and browser skill for source discovery, dynamic page access, real browser interaction, login-state reuse, multi-format content extraction, and reusable site knowledge accumulation.
+Nexurf is an agent-native browser skill for source discovery, dynamic page interaction, login-state reuse, multi-format content extraction, and reusable site knowledge accumulation.
+
+## Usage
+
+Nexurf requires a locally running Chromium-based browser with remote debugging enabled. Before using Nexurf, complete the setup below.
+
+### Prerequisites
+Use a supported browser such as:
+- Google Chrome
+- Chrome Canary
+- Chromium
+
+### Enable Remote Debugging
+Start the browser with a remote debugging port enabled.
+
+Example on macOS:
+
+```bash
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+```
+
+If the browser is already running, fully quit it first and then restart it with the flag above.
+
+### Confirm Browser Access
+After the browser starts, open:
+
+```text
+chrome://inspect/#remote-debugging
+```
+
+Confirm that remote debugging is enabled for the current browser instance.
+
+### Keep the Browser Session Alive
+Keep the browser open while Nexurf is in use. Nexurf relies on the live browser session for page access, interaction, and login-state reuse.
+
+### Use Nexurf in Your Agent Environment
+Once the browser is ready, Nexurf can be used from an agent environment that supports local skill execution and browser bridge access.
 
 ## Overview
 
-Nexurf is designed for agent workflows that need more than static page fetching. It provides a structured way to choose the right access path for a task, connect to a real browser environment when necessary, interact with dynamic pages, and extract content from complex carriers such as iframes, viewers, PDFs, Office documents, and images.
+Nexurf is designed for agent workflows that need reliable browser-based access to real websites and dynamic content. It provides a structured way to connect to a live browser environment, interact with pages, and extract content from complex carriers such as iframes, viewers, PDFs, Office documents, and images.
 
-Rather than treating web access as a collection of one-off scripts, Nexurf is organized as a reusable skill/runtime foundation for repeatable agent work.
+Nexurf is organized as a reusable skill/runtime foundation for repeatable agent workflows rather than a one-off automation script.
 
 ## Capabilities
 
@@ -44,20 +80,6 @@ Rather than treating web access as a collection of one-off scripts, Nexurf is or
 - Treat dynamic pages and embedded resources as first-class content carriers
 - Keep site knowledge reusable instead of hard-coding one-off logic
 
-## Quick Start
-
-Run the runtime check before using the browser bridge:
-
-```bash
-node scripts/check-runtime.mjs
-```
-
-This check verifies:
-- Node.js availability
-- browser remote debugging availability
-- bridge availability
-- existing site profiles
-
 ## Included Components
 
 ### `SKILL.md`
@@ -92,4 +114,4 @@ Stores reusable site-specific operating knowledge, such as stable entry paths, k
 
 ## Notes
 
-Nexurf is intended to be used as a reusable agent skill and runtime foundation. It is not positioned as a one-off scraping template or a single-site automation script.
+Nexurf is intended to be used as a reusable agent skill and runtime foundation. It is not positioned as a single-site workflow template.
