@@ -1,18 +1,42 @@
+<div align="center">
+
 # Nexurf
 
-Nexurf is an agent-native browser skill for source discovery, dynamic page interaction, login-state reuse, multi-format content extraction, and reusable site knowledge accumulation.
+**An agent-native browser skill for dynamic interaction, content extraction, and reusable site knowledge.**
+
+[中文说明](./README_CN.md) · [MIT License](./LICENSE)
+
+</div>
+
+---
+
+## Overview
+
+Nexurf is designed for agent workflows that need reliable browser-based access to real websites and dynamic content. It provides a structured way to connect to a live browser environment, interact with pages, and extract content from complex carriers such as iframes, viewers, PDFs, Office documents, and images.
+
+Nexurf is organized as a reusable skill/runtime foundation for repeatable agent workflows.
+
+## Highlights
+
+- Discover official sources and stable entry points
+- Read static and dynamically rendered pages
+- Reuse real browser context and login state when required
+- Perform browser actions such as navigation, click, scroll, upload, and snapshot
+- Detect content carriers including iframe, embed, viewer, PDF, Office files, and images
+- Route extraction by carrier type and content format
+- Accumulate reusable site profiles for future tasks
 
 ## Usage
 
 Nexurf requires a locally running Chromium-based browser with remote debugging enabled. Before using Nexurf, complete the setup below.
 
-### Prerequisites
-Use a supported browser such as:
+### 1. Prepare a supported browser
+Use a Chromium-based browser such as:
 - Google Chrome
 - Chrome Canary
 - Chromium
 
-### Enable Remote Debugging
+### 2. Enable remote debugging
 Start the browser with a remote debugging port enabled.
 
 Example on macOS:
@@ -23,7 +47,7 @@ Example on macOS:
 
 If the browser is already running, fully quit it first and then restart it with the flag above.
 
-### Confirm Browser Access
+### 3. Confirm browser access
 After the browser starts, open:
 
 ```text
@@ -32,27 +56,11 @@ chrome://inspect/#remote-debugging
 
 Confirm that remote debugging is enabled for the current browser instance.
 
-### Keep the Browser Session Alive
+### 4. Keep the browser session alive
 Keep the browser open while Nexurf is in use. Nexurf relies on the live browser session for page access, interaction, and login-state reuse.
 
-### Use Nexurf in Your Agent Environment
+### 5. Use Nexurf in your agent environment
 Once the browser is ready, Nexurf can be used from an agent environment that supports local skill execution and browser bridge access.
-
-## Overview
-
-Nexurf is designed for agent workflows that need reliable browser-based access to real websites and dynamic content. It provides a structured way to connect to a live browser environment, interact with pages, and extract content from complex carriers such as iframes, viewers, PDFs, Office documents, and images.
-
-Nexurf is organized as a reusable skill/runtime foundation for repeatable agent workflows rather than a one-off automation script.
-
-## Capabilities
-
-- Discover official sources and stable entry points
-- Read static and dynamically rendered pages
-- Reuse real browser context and login state when required
-- Perform browser actions such as navigation, click, scroll, upload, and snapshot
-- Detect content carriers including iframe, embed, viewer, PDF, Office files, and images
-- Route extraction by carrier type and content format
-- Accumulate reusable site profiles for future tasks
 
 ## Repository Structure
 
@@ -60,6 +68,7 @@ Nexurf is organized as a reusable skill/runtime foundation for repeatable agent 
 .
 ├── SKILL.md
 ├── README.md
+├── README_CN.md
 ├── LICENSE
 ├── .gitignore
 ├── references/
@@ -71,14 +80,6 @@ Nexurf is organized as a reusable skill/runtime foundation for repeatable agent 
     ├── check-runtime.mjs
     └── match-profile.mjs
 ```
-
-## Core Principles
-
-- Prefer the shortest valid path to the task goal
-- Prefer official and first-hand sources for verification work
-- Preserve full URLs and parameters by default
-- Treat dynamic pages and embedded resources as first-class content carriers
-- Keep site knowledge reusable instead of hard-coding one-off logic
 
 ## Included Components
 
@@ -112,6 +113,6 @@ Stores reusable site-specific operating knowledge, such as stable entry paths, k
 - Multi-format content retrieval
 - Reusable site operational knowledge accumulation
 
-## Notes
+## License
 
-Nexurf is intended to be used as a reusable agent skill and runtime foundation. It is not positioned as a single-site workflow template.
+This project is released under the [MIT License](./LICENSE).
