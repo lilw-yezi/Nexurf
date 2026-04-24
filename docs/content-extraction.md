@@ -34,6 +34,11 @@
 常见参数：
 - `file=`
 - `filePath=`
+- `url=`
+- `src=`
+- `href=`
+- `path=`
+- `attach=` / `attachment=` / `download=`
 - 真实文件 URL 作为 query 参数或路径片段
 
 ## 当前已落地能力
@@ -73,7 +78,7 @@
 优先策略：
 1. 先识别 `.ofd` 或 OFD viewer
 2. 先找是否存在 PDF/HTML 预览替代路径
-3. 当前 bridge 会同时扫描页面中的候选链接，收集 `alternativeResources`
+3. 当前 runtime service 会同时扫描页面中的候选链接，收集 `alternativeResources`
 4. 若存在 PDF 替代资源，优先回退到 PDF extractor，而不是强依赖 OFD 原生解析器
 5. 若无替代路径，再考虑 OFD 解析器或转码链路
 6. 若环境里没有可用 OFD 解析能力，则至少返回资源 URL、承载类型、替代资源和后续建议，不让链路中断
@@ -91,7 +96,7 @@
 优先策略：
 1. 判断是否图片型 PDF 或纯图片正文
 2. 能拿原图就优先拿原图
-3. 当前 bridge 已支持先把图片资源下载到本地并返回 `savedPath`
+3. 当前 runtime service 已支持先把图片资源下载到本地并返回 `savedPath`
 4. 再在此基础上接轻量 OCR / 视觉识别兜底
 5. 不默认绑定必须额外安装的重型 OCR 环境
 
@@ -111,3 +116,10 @@
 - 优先怀疑：参数丢失、viewer 包裹、防盗链、Cookie/Referer 限制、扫描件
 - 先换路径，再下结论
 - 缺少第三方解析器，不等于整个链路失败；至少要把承载体、资源 URL、可用 fallback 说清楚
+
+
+## 2026-04-24 收口增强
+- `/carrier` 已扩展资源发现面：链接、媒体标签、viewer 参数、脚本片段都会纳入候选资源扫描。
+- 候选资源会去重、分类并排序，优先暴露 PDF、Office、OFD、Image 与 viewer/download candidate。
+- `profile-engine.mjs` 已升级为评分式匹配，可同时按 domain、aliases、输入中的 host-like 与正文关键词匹配站点画像。
+- 新增 `quality/regression/README.md` 作为发布前和后续迭代的回归口径清单。

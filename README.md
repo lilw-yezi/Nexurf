@@ -60,7 +60,7 @@ Confirm that remote debugging is enabled for the current browser instance.
 Keep the browser open while Nexurf is in use. Nexurf relies on the live browser session for page access, interaction, and login-state reuse.
 
 ### 5. Use Nexurf in your agent environment
-Once the browser is ready, Nexurf can be used from an agent environment that supports local skill execution and browser bridge access.
+Once the browser is ready, Nexurf can be used from an agent environment that supports local skill execution and Nexurf Runtime Service access.
 
 ## Repository Structure
 
@@ -71,14 +71,19 @@ Once the browser is ready, Nexurf can be used from an agent environment that sup
 ├── README_CN.md
 ├── LICENSE
 ├── .gitignore
-├── references/
-│   ├── browser-api.md
-│   ├── content-extraction.md
-│   └── site-profiles/
+├── runtime/
+│   ├── service.mjs
+│   ├── doctor.mjs
+│   └── profile-engine.mjs
+├── docs/
+│   ├── runtime-api.md
+│   └── content-extraction.md
+├── profiles/
+│   └── site/
+├── quality/
+│   └── regression/
 └── scripts/
-    ├── browser-bridge.mjs
-    ├── check-runtime.mjs
-    └── match-profile.mjs
+    └── compatibility entrypoints
 ```
 
 ## Included Components
@@ -86,23 +91,20 @@ Once the browser is ready, Nexurf can be used from an agent environment that sup
 ### `SKILL.md`
 Defines the operating guidance for using Nexurf in agent workflows, including path selection, browser usage, extraction strategy, and site-profile usage.
 
-### `scripts/check-runtime.mjs`
-Validates the local runtime environment and ensures the Nexurf bridge is available.
+### `runtime/`
+Contains Nexurf runtime modules: Runtime Service, runtime check, and site-profile matching.
 
-### `scripts/browser-bridge.mjs`
-Provides the browser-side bridge for page creation, navigation, inspection, interaction, carrier detection, extraction, and cleanup.
+### `docs/`
+Documents Runtime API endpoints, action boundaries, response conventions, and content extraction models.
 
-### `scripts/match-profile.mjs`
-Matches a task or site description against existing site profiles.
-
-### `references/browser-api.md`
-Documents the bridge endpoints, action boundaries, and response conventions.
-
-### `references/content-extraction.md`
-Documents the carrier-detection and extraction-routing model used for multi-format content retrieval.
-
-### `references/site-profiles/`
+### `profiles/site/`
 Stores reusable site-specific operating knowledge, such as stable entry paths, known pitfalls, and parameter preservation rules.
+
+### `quality/regression/`
+Stores regression cases and release validation checklists.
+
+### `scripts/`
+Keeps thin compatibility entrypoints for older skill runners. New development should use `runtime/` directly.
 
 ## Typical Use Cases
 

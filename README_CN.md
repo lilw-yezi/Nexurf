@@ -60,7 +60,7 @@ chrome://inspect/#remote-debugging
 在 Nexurf 使用期间，不要关闭浏览器。Nexurf 依赖这个实时浏览器会话来完成页面访问、交互和登录态复用。
 
 ### 5. 在你的 Agent 环境中使用 Nexurf
-浏览器准备好之后，就可以在支持本地 Skill 执行和 browser bridge 访问的 Agent 环境中使用 Nexurf。
+浏览器准备好之后，就可以在支持本地 Skill 执行和 Runtime Service 访问的 Agent 环境中使用 Nexurf。
 
 ## 仓库结构
 
@@ -71,14 +71,19 @@ chrome://inspect/#remote-debugging
 ├── README_CN.md
 ├── LICENSE
 ├── .gitignore
-├── references/
-│   ├── browser-api.md
-│   ├── content-extraction.md
-│   └── site-profiles/
+├── runtime/
+│   ├── service.mjs
+│   ├── doctor.mjs
+│   └── profile-engine.mjs
+├── docs/
+│   ├── runtime-api.md
+│   └── content-extraction.md
+├── profiles/
+│   └── site/
+├── quality/
+│   └── regression/
 └── scripts/
-    ├── browser-bridge.mjs
-    ├── check-runtime.mjs
-    └── match-profile.mjs
+    └── 兼容入口
 ```
 
 ## 组成部分
@@ -86,23 +91,20 @@ chrome://inspect/#remote-debugging
 ### `SKILL.md`
 定义 Nexurf 在 Agent 工作流中的使用规则，包括路径选择、浏览器使用原则、提取策略与站点画像调用方式。
 
-### `scripts/check-runtime.mjs`
-用于检查本地运行环境，并确保 Nexurf bridge 可用。
+### `runtime/`
+保存 Nexurf 运行时模块，包括Runtime Service、Runtime Doctor 和 Profile Engine。
 
-### `scripts/browser-bridge.mjs`
-提供浏览器侧 bridge，支持页面创建、导航、检查、交互、承载体识别、内容提取与清理。
+### `docs/`
+记录 Runtime API 接口、动作边界、返回约定和内容提取模型。
 
-### `scripts/match-profile.mjs`
-用于将任务描述或目标站点与现有站点画像进行匹配。
-
-### `references/browser-api.md`
-记录 bridge 的接口、动作边界与返回约定。
-
-### `references/content-extraction.md`
-记录多格式内容提取所使用的承载体识别与提取路由方法。
-
-### `references/site-profiles/`
+### `profiles/site/`
 保存可复用的站点经验，例如稳定入口、已知陷阱和参数保留规则。
+
+### `quality/regression/`
+保存回归样例与发布前验证清单。
+
+### `scripts/`
+仅保留旧 Skill 调用兼容入口；后续开发默认直接使用 `runtime/`。
 
 ## 典型使用场景
 
