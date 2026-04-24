@@ -134,6 +134,20 @@ Keeps thin compatibility entrypoints for older skill runners. New development sh
 - Multi-format content retrieval
 - Reusable site operational knowledge accumulation
 
+## Scenario Library
+
+Nexurf 1.5 expands the scenario library for real-world web tasks. Current scenario families include:
+
+- government policy and information disclosure pages
+- PDF/OFD/WPS/Office document viewers
+- button-triggered document resources
+- search pages with JavaScript pagination and empty query parameters
+- news and institution notices
+- developer sites, API docs, and package registries
+- dynamic pages, login walls, and failure-mode classification
+
+See `profiles/site/` and `quality/regression/scenario-index.md`.
+
 ## Testing
 
 Run all quality checks:

@@ -28,6 +28,11 @@ async function main() {
   assert(health.ok === true, 'health ok mismatch');
   assert(health.service === 'nexurf-runtime-service', 'service id mismatch');
 
+  // Runtime Service may be shared by real tasks. The smoke test must verify
+  // cleanup of the page it creates, without assuming it owns every page in
+  // the long-lived service.
+  const existingPageIds = new Set((health.pages?.items || []).map((item) => item.pageId));
+
   const opened = await jsonFetch(`/new?url=${encodeURIComponent('https://www.example.com/')}`, { timeoutMs: 20000 });
   assert(opened.ok === true, 'open failed');
   assert(opened.page?.title === 'Example Domain', 'unexpected title');
@@ -62,7 +67,11 @@ async function main() {
   assert(close.ok === true && close.closed === true, 'close failed');
 
   const finalHealth = await jsonFetch('/health', { timeoutMs: 5000 });
-  assert(finalHealth.pages?.total === 0, 'pages not cleaned');
+  const finalPageIds = new Set((finalHealth.pages?.items || []).map((item) => item.pageId));
+  assert(!finalPageIds.has(pageId), 'created page not cleaned');
+  for (const existingPageId of existingPageIds) {
+    if (finalPageIds.has(existingPageId)) continue;
+  }
   console.log('ok runtime smoke');
 }
 

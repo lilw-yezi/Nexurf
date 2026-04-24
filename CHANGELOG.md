@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.0 - 2026-04-24
+
+### Added
+- Expanded scenario library for broader real-world web tasks.
+- Added Hubei policy database verified profile and regression case.
+- Added profiles for button-triggered document resources, JavaScript pagination search, government information disclosure, attachment lists, office preview, resource failures, institution notices, API docs, package registries, and login/verification walls.
+- Added scenario regression index and category files.
+- Added `test:scenario` smoke test.
+
+### Changed
+- Profile smoke now validates key 1.5 scenario profiles.
+- README / README_CN / SKILL now describe the scenario library path.
+
 ## 1.0.0 - 2026-04-24
 
 ### Added

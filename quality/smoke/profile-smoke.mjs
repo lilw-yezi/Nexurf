@@ -30,6 +30,11 @@ const checks = [
   ['小红书 xiaohongshu 笔记页面', 'xiaohongshu'],
   ['github repository pull request issue', 'github'],
   ['pdf viewer filePath iframe document', 'generic-pdf-viewer'],
+  ['湖北省法规规章规范性文件数据库 PDF版本', 'hubei-pdb'],
+  ['点击 PDF版本 WPS版本 OFD版本 document button', 'button-document-resource'],
+  ['javascript 分页 搜索 空参数', 'js-pagination-search'],
+  ['政府信息公开 附件 政务公开', 'government-info-disclosure'],
+  ['pdbstaticsnull null resource malformed URL', 'error-resource'],
 ];
 for (const [query, expected] of checks) {
   const result = spawnSync(process.execPath, ['runtime/profile-engine.mjs', query], { cwd: root, encoding: 'utf8' });

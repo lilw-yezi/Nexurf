@@ -134,6 +134,20 @@ chrome://inspect/#remote-debugging
 - 多格式内容读取
 - 站点经验沉淀与复用
 
+## 场景库
+
+Nexurf 1.5 扩展真实网页任务场景库。当前覆盖方向包括：
+
+- 政务政策库与政府信息公开页
+- PDF/OFD/WPS/Office 文档 viewer
+- 按钮触发的文档资源
+- JavaScript 分页与空参数搜索页
+- 新闻文章与机构通知
+- 开发者站点、API 文档、包注册表
+- 动态页面、登录墙与失败模式分类
+
+详见 `profiles/site/` 与 `quality/regression/scenario-index.md`。
+
 ## 测试
 
 运行全部质量检查：

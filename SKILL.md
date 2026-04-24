@@ -228,3 +228,17 @@ npm run test
 ```
 
 该命令会执行语法检查、脱敏扫描、站点画像测试和 Runtime API smoke test。
+
+
+## 场景库优先级
+遇到真实网页任务后，优先判断是否属于已有场景：
+
+- 政务政策库 / 政府信息公开
+- PDF/OFD/WPS/Office viewer
+- 按钮触发文档资源
+- 搜索分页 / 表单筛选 / 空参数查询
+- 新闻文章 / 机构通知
+- 开发者文档 / GitHub / 包注册表
+- 动态页面 / 登录墙 / 资源异常
+
+如果任务中发现新的稳定模式，应补充 `profiles/site/` 和 `quality/regression/`，让 Nexurf 越用越可复用。
