@@ -134,6 +134,12 @@ Keeps thin compatibility entrypoints for older skill runners. New development sh
 - Multi-format content retrieval
 - Reusable site operational knowledge accumulation
 
+## Carrier Automation
+
+Nexurf 1.6 can automatically detect document resources exposed by buttons such as PDF, OFD, WPS, attachment, download, body, and preview controls.
+
+It captures `window.open()`, newly inserted iframe/embed/object resources, and malformed resource states such as `null`, `undefined`, or `pdbstaticsnull`. See `docs/carrier-automation.md`.
+
 ## Scenario Library
 
 Nexurf 1.5 expands the scenario library for real-world web tasks. Current scenario families include:

@@ -242,3 +242,16 @@ npm run test
 - 动态页面 / 登录墙 / 资源异常
 
 如果任务中发现新的稳定模式，应补充 `profiles/site/` 和 `quality/regression/`，让 Nexurf 越用越可复用。
+
+
+## 承载体自动识别
+Nexurf 1.6 的 `/carrier` 会尝试自动识别按钮触发的文档资源。
+
+重点识别：
+- PDF版本 / OFD版本 / WPS版本
+- 附件 / 下载 / 正文 / 全文 / 预览
+- `window.open()` 触发的资源
+- 新增 iframe / embed / object
+- `null` / `undefined` / `pdbstaticsnull` 等资源异常
+
+使用时优先调用 `/carrier`，再根据 `carrier.resourceUrl`、`carrier.resourceIssue`、`carrier.interactiveDocumentResources` 和 `alternativeResources` 判断下一步。

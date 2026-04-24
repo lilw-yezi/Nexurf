@@ -106,6 +106,19 @@ function classifyResourceKind(resourceUrl = '', text = '') {
   return 'resource';
 }
 
+function classifyResourceIssue(resourceUrl = '') {
+  const value = String(resourceUrl || '').trim();
+  if (!value) return 'resource_missing';
+  if (/null|undefined|nan/i.test(value)) return 'resource_malformed';
+  if (!/^https?:\/\//i.test(value) && !value.startsWith('data:') && !value.startsWith('blob:')) return 'resource_malformed';
+  return null;
+}
+
+function rankResourceKind(kind = 'resource') {
+  const rank = { pdf: 1, html: 2, office: 3, ofd: 4, image: 5, candidate: 9, resource: 20 };
+  return rank[kind] || 20;
+}
+
 function uniqueResources(resources) {
   const seen = new Set();
   const result = [];
@@ -562,6 +575,76 @@ async function queryNode(sessionId, selector) {
   return nodeId;
 }
 
+
+async function detectInteractiveDocumentResources(sessionId) {
+  const response = await sendCommand('Runtime.evaluate', {
+    expression: `(async () => {
+      const clean = s => (s || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+      const labelRe = /(pdf|ofd|wps|word|docx?|rtf|附件|下载|正文|全文|查看|预览|版本)/i;
+      const selector = [
+        'a', 'button', '[role="button"]',
+        'input[type="button"]', 'input[type="submit"]',
+        '[onclick]', '[id*="pdf" i]', '[id*="ofd" i]', '[id*="wps" i]',
+        '[class*="pdf" i]', '[class*="ofd" i]', '[class*="wps" i]',
+        '[title*="PDF" i]', '[title*="OFD" i]', '[title*="WPS" i]'
+      ].join(',');
+      const elements = Array.from(document.querySelectorAll(selector))
+        .map((el, index) => ({
+          el,
+          index,
+          text: clean(el.innerText || el.textContent || el.value || el.title || el.alt || el.getAttribute('aria-label') || el.getAttribute('id') || el.getAttribute('class') || ''),
+          href: el.href || el.getAttribute('href') || '',
+          id: el.id || '',
+          className: String(el.className || ''),
+          tag: el.tagName,
+        }))
+        .filter(item => labelRe.test([item.text, item.href, item.id, item.className].join(' ')))
+        .slice(0, 12);
+      const captured = [];
+      const beforeFrames = new Set(Array.from(document.querySelectorAll('iframe,frame,embed,object')).map(el => el.src || el.data || ''));
+      const oldOpen = window.open;
+      window.open = function(url, ...args) {
+        captured.push({ source: 'window.open', resourceUrl: url || '', args, text: 'window.open' });
+        return null;
+      };
+      try {
+        for (const item of elements) {
+          const hrefBefore = location.href;
+          try {
+            if (item.href && !/^javascript:/i.test(item.href)) {
+              captured.push({ source: 'button.href', resourceUrl: item.href, text: item.text, tag: item.tag, id: item.id });
+            }
+            item.el.scrollIntoView({ block: 'center', inline: 'center' });
+            item.el.click();
+            await new Promise(resolve => setTimeout(resolve, 900));
+            const frames = Array.from(document.querySelectorAll('iframe,frame,embed,object'))
+              .map(el => el.src || el.data || '')
+              .filter(Boolean)
+              .filter(src => !beforeFrames.has(src));
+            for (const src of frames) captured.push({ source: 'inserted-frame', resourceUrl: src, text: item.text, tag: item.tag, id: item.id });
+            if (location.href !== hrefBefore) {
+              captured.push({ source: 'navigation', resourceUrl: location.href, text: item.text, tag: item.tag, id: item.id });
+              history.back();
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          } catch (error) {
+            captured.push({ source: 'button-error', resourceUrl: '', text: item.text, tag: item.tag, id: item.id, error: String(error && error.message || error) });
+          }
+        }
+      } finally {
+        window.open = oldOpen;
+      }
+      return {
+        buttons: elements.map(item => ({ text: item.text, href: item.href, id: item.id, className: item.className, tag: item.tag })),
+        captured,
+      };
+    })()`,
+    returnByValue: true,
+    awaitPromise: true,
+  }, sessionId, 45000);
+  return response.result?.result?.value || { buttons: [], captured: [] };
+}
+
 async function detectContentCarrier(sessionId) {
   const response = await sendCommand('Runtime.evaluate', {
     expression: `(() => {
@@ -656,17 +739,44 @@ async function detectContentCarrier(sessionId) {
       source: 'script',
     })));
 
-  const alternativeResources = uniqueResources([...linkResources, ...mediaResources, ...scriptResources])
+  const interactive = await detectInteractiveDocumentResources(sessionId).catch(error => ({
+    buttons: [],
+    captured: [],
+    error: error?.message || String(error),
+  }));
+  const interactiveResources = (interactive.captured || []).map(item => {
+    const resolvedItem = resolveViewerResource(item.resourceUrl || '', raw.pageUrl);
+    return {
+      text: item.text || item.source || 'interactive-document-resource',
+      resourceUrl: resolvedItem.resourceUrl,
+      viewerUrl: resolvedItem.viewerUrl || '',
+      source: item.source || 'interactive',
+      tag: item.tag || '',
+      id: item.id || '',
+      error: item.error || '',
+    };
+  });
+
+  const alternativeResources = uniqueResources([...interactiveResources, ...linkResources, ...mediaResources, ...scriptResources])
     .map(item => ({
       ...item,
       kind: classifyResourceKind(item.resourceUrl, item.text),
+      issue: classifyResourceIssue(item.resourceUrl),
     }))
-    .filter(item => item.kind !== 'resource')
-    .sort((a, b) => {
-      const rank = { pdf: 1, html: 2, office: 3, ofd: 4, image: 5, candidate: 9 };
-      return (rank[a.kind] || 8) - (rank[b.kind] || 8);
-    })
-    .slice(0, 40);
+    .filter(item => item.kind !== 'resource' || item.issue)
+    .sort((a, b) => rankResourceKind(a.kind) - rankResourceKind(b.kind))
+    .slice(0, 60);
+
+  const primaryAlternative = alternativeResources.find(item => !item.issue && item.kind !== 'candidate')
+    || alternativeResources.find(item => !item.issue)
+    || null;
+  if ((!finalResourceUrl || directKind === 'resource' || directKind === 'candidate') && primaryAlternative?.resourceUrl) {
+    finalResourceUrl = primaryAlternative.resourceUrl;
+    viewerUrl = primaryAlternative.viewerUrl || viewerUrl;
+    contentKind = primaryAlternative.kind;
+    carrierKind = primaryAlternative.source?.startsWith('window') || primaryAlternative.source?.includes('button') ? 'interactive' : primaryAlternative.kind;
+  }
+  const resourceIssue = classifyResourceIssue(finalResourceUrl);
 
   return {
     ...raw,
@@ -674,6 +784,12 @@ async function detectContentCarrier(sessionId) {
     carrierKind,
     viewerUrl,
     resourceUrl: finalResourceUrl,
+    resourceIssue,
+    interactiveDocumentResources: {
+      buttons: interactive.buttons || [],
+      captured: alternativeResources.filter(item => ['window.open', 'button.href', 'inserted-frame', 'navigation', 'button-error'].includes(item.source)),
+      error: interactive.error || null,
+    },
     alternativeResources,
   };
 }

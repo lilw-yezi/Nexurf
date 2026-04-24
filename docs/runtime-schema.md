@@ -199,3 +199,33 @@ Response with file:
   "closed": true
 }
 ```
+
+## Carrier Automation Fields
+
+Nexurf 1.6 adds these optional carrier fields:
+
+```json
+{
+  "carrierKind": "interactive",
+  "resourceIssue": null,
+  "interactiveDocumentResources": {
+    "buttons": [],
+    "captured": [],
+    "error": null
+  },
+  "alternativeResources": [
+    {
+      "text": "PDF版本",
+      "resourceUrl": "https://example.com/doc.pdf",
+      "source": "window.open",
+      "kind": "pdf",
+      "issue": null
+    }
+  ]
+}
+```
+
+Known `issue` values include:
+
+- `resource_missing`
+- `resource_malformed`

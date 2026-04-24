@@ -134,6 +134,12 @@ chrome://inspect/#remote-debugging
 - 多格式内容读取
 - 站点经验沉淀与复用
 
+## 承载体自动识别
+
+Nexurf 1.6 可以在 `/carrier` 中自动识别按钮触发的文档资源，例如 `PDF版本`、`OFD版本`、`WPS版本`、附件、下载、正文和预览按钮。
+
+它会捕获 `window.open()`、新增 iframe/embed/object，以及资源异常状态，例如 `null`、`undefined`、`pdbstaticsnull`。详见 `docs/carrier-automation.md`。
+
 ## 场景库
 
 Nexurf 1.5 扩展真实网页任务场景库。当前覆盖方向包括：

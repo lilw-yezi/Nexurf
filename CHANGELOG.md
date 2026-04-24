@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.0 - 2026-04-24
+
+### Added
+- Added Carrier Automation in Runtime Service for button-triggered document resources.
+- `/carrier` now captures likely PDF/OFD/WPS/attachment buttons, `window.open()` resources, inserted frame resources, and malformed resource states.
+- Added `docs/carrier-automation.md`.
+- Added `quality/smoke/carrier-automation-smoke.mjs` and `npm run test:carrier`.
+
+### Changed
+- Package version bumped to `1.6.0`.
+- Full test chain now includes carrier automation smoke.
+
 ## 1.5.0 - 2026-04-24
 
 ### Added
