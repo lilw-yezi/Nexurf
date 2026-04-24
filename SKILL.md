@@ -255,3 +255,22 @@ Nexurf 1.6 的 `/carrier` 会尝试自动识别按钮触发的文档资源。
 - `null` / `undefined` / `pdbstaticsnull` 等资源异常
 
 使用时优先调用 `/carrier`，再根据 `carrier.resourceUrl`、`carrier.resourceIssue`、`carrier.interactiveDocumentResources` 和 `alternativeResources` 判断下一步。
+
+
+## Task Runner
+Nexurf 1.7 提供任务级入口：
+
+```bash
+npm run task -- "目标URL" --goal inspect-site
+npm run task -- "目标URL" --goal extract-page
+npm run task -- "目标URL" --goal extract-documents
+npm run task -- "目标URL" --goal extract-list --limit 5
+```
+
+可用 goal：
+- `inspect-site`：站点诊断与承载体识别
+- `extract-page`：单页正文提取
+- `extract-documents`：文档资源提取
+- `extract-list`：列表页批量详情提取
+
+当用户给出 URL 和明确抓取目标时，优先考虑 Task Runner；当 Task Runner 失败时，再降级到 Runtime API 单步处理。

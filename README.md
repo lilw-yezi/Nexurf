@@ -134,6 +134,17 @@ Keeps thin compatibility entrypoints for older skill runners. New development sh
 - Multi-format content retrieval
 - Reusable site operational knowledge accumulation
 
+## Task Runner
+
+Nexurf 1.7 adds a task execution layer:
+
+```bash
+npm run task -- "https://example.com" --goal inspect-site
+npm run task -- "https://example.com/list" --goal extract-list --limit 5
+```
+
+Supported goals: `inspect-site`, `extract-page`, `extract-documents`, and `extract-list`. See `docs/task-runner.md`.
+
 ## Carrier Automation
 
 Nexurf 1.6 can automatically detect document resources exposed by buttons such as PDF, OFD, WPS, attachment, download, body, and preview controls.

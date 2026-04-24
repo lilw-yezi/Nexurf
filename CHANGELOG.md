@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.7.0 - 2026-04-24
+
+### Added
+- Added Task Runner API: `POST /task`.
+- Added CLI: `npm run task -- <url> --goal <goal>`.
+- Added task goals: `inspect-site`, `extract-page`, `extract-documents`, and `extract-list`.
+- Added task-level result schema with steps, items, resources, warnings, errors, and summary input.
+- Added `docs/task-runner.md`.
+- Added `quality/smoke/task-smoke.mjs` and `npm run test:task`.
+
+### Changed
+- Package version bumped to `1.7.0`.
+- Full test chain now includes task smoke.
+- Browser discovery supports `NEXURF_BROWSER_PORT` override and fetches browser WebSocket path from `/json/version` when possible.
+
 ## 1.6.0 - 2026-04-24
 
 ### Added

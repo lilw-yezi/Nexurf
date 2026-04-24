@@ -229,3 +229,31 @@ Known `issue` values include:
 
 - `resource_missing`
 - `resource_malformed`
+
+## Task Runner Response
+
+Nexurf 1.7 adds `POST /task` with this task-level shape:
+
+```json
+{
+  "ok": true,
+  "taskId": "task_xxxxxxxx",
+  "goal": "inspect-site",
+  "input": {},
+  "profile": { "ok": true, "name": "hubei-pdb" },
+  "steps": [],
+  "items": [],
+  "resources": [],
+  "warnings": [],
+  "errors": [],
+  "summaryReady": true,
+  "summaryInput": "..."
+}
+```
+
+Supported initial goals:
+
+- `inspect-site`
+- `extract-page`
+- `extract-documents`
+- `extract-list`

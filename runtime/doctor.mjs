@@ -27,29 +27,37 @@ function checkPort(port, host = '127.0.0.1', timeoutMs = 1500) {
 function candidatePortFiles() {
   const home = os.homedir();
   const localAppData = process.env.LOCALAPPDATA || '';
+  const files = [];
+  if (process.env.NEXURF_DEVTOOLS_ACTIVE_PORT_FILE) files.push(process.env.NEXURF_DEVTOOLS_ACTIVE_PORT_FILE);
   switch (os.platform()) {
     case 'darwin':
-      return [
+      files.push(
         path.join(home, 'Library/Application Support/Google/Chrome/DevToolsActivePort'),
         path.join(home, 'Library/Application Support/Google/Chrome Canary/DevToolsActivePort'),
         path.join(home, 'Library/Application Support/Chromium/DevToolsActivePort'),
-      ];
+      );
+      break;
     case 'linux':
-      return [
+      files.push(
         path.join(home, '.config/google-chrome/DevToolsActivePort'),
         path.join(home, '.config/chromium/DevToolsActivePort'),
-      ];
+      );
+      break;
     case 'win32':
-      return [
+      files.push(
         path.join(localAppData, 'Google/Chrome/User Data/DevToolsActivePort'),
         path.join(localAppData, 'Chromium/User Data/DevToolsActivePort'),
-      ];
-    default:
-      return [];
+      );
+      break;
   }
+  return files;
 }
 
+
 async function detectBrowserDebugPort() {
+  const preferredPort = Number(process.env.NEXURF_BROWSER_PORT || 0);
+  if (preferredPort > 0 && await checkPort(preferredPort)) return { port: preferredPort, wsPath: null };
+
   for (const file of candidatePortFiles()) {
     try {
       const lines = fs.readFileSync(file, 'utf8').trim().split(/\r?\n/).filter(Boolean);
@@ -57,7 +65,7 @@ async function detectBrowserDebugPort() {
       if (port > 0 && await checkPort(port)) return { port, wsPath: lines[1] || null };
     } catch {}
   }
-  for (const port of [9222, 9229, 9333]) {
+  for (const port of [Number(process.env.NEXURF_BROWSER_PORT || 0), 9333, 9222, 9229].filter(Boolean)) {
     if (await checkPort(port)) return { port, wsPath: null };
   }
   return null;

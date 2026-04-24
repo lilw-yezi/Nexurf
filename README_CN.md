@@ -134,6 +134,17 @@ chrome://inspect/#remote-debugging
 - 多格式内容读取
 - 站点经验沉淀与复用
 
+## Task Runner
+
+Nexurf 1.7 增加任务执行层，可直接执行网页任务：
+
+```bash
+npm run task -- "https://example.com" --goal inspect-site
+npm run task -- "https://example.com/list" --goal extract-list --limit 5
+```
+
+支持 `inspect-site`、`extract-page`、`extract-documents`、`extract-list`。详见 `docs/task-runner.md`。
+
 ## 承载体自动识别
 
 Nexurf 1.6 可以在 `/carrier` 中自动识别按钮触发的文档资源，例如 `PDF版本`、`OFD版本`、`WPS版本`、附件、下载、正文和预览按钮。

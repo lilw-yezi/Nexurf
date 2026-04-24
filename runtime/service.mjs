@@ -149,27 +149,32 @@ function resolveViewerResource(viewerUrl, baseUrl = '') {
 function candidatePortFiles() {
   const home = os.homedir();
   const localAppData = process.env.LOCALAPPDATA || '';
+  const files = [];
+  if (process.env.NEXURF_DEVTOOLS_ACTIVE_PORT_FILE) files.push(process.env.NEXURF_DEVTOOLS_ACTIVE_PORT_FILE);
   switch (os.platform()) {
     case 'darwin':
-      return [
+      files.push(
         path.join(home, 'Library/Application Support/Google/Chrome/DevToolsActivePort'),
         path.join(home, 'Library/Application Support/Google/Chrome Canary/DevToolsActivePort'),
         path.join(home, 'Library/Application Support/Chromium/DevToolsActivePort'),
-      ];
+      );
+      break;
     case 'linux':
-      return [
+      files.push(
         path.join(home, '.config/google-chrome/DevToolsActivePort'),
         path.join(home, '.config/chromium/DevToolsActivePort'),
-      ];
+      );
+      break;
     case 'win32':
-      return [
-        path.join(process.env.LOCALAPPDATA || '', 'Google/Chrome/User Data/DevToolsActivePort'),
-        path.join(process.env.LOCALAPPDATA || '', 'Chromium/User Data/DevToolsActivePort'),
-      ];
-    default:
-      return [];
+      files.push(
+        path.join(localAppData, 'Google/Chrome/User Data/DevToolsActivePort'),
+        path.join(localAppData, 'Chromium/User Data/DevToolsActivePort'),
+      );
+      break;
   }
+  return files;
 }
+
 
 function checkPort(port, host = '127.0.0.1', timeoutMs = 1500) {
   return new Promise((resolve) => {
@@ -191,6 +196,9 @@ function checkPort(port, host = '127.0.0.1', timeoutMs = 1500) {
 }
 
 async function discoverBrowserEndpoint() {
+  const preferredPort = Number(process.env.NEXURF_BROWSER_PORT || 0);
+  if (preferredPort > 0 && await checkPort(preferredPort)) return { port: preferredPort, wsPath: null };
+
   for (const file of candidatePortFiles()) {
     try {
       const lines = fs.readFileSync(file, 'utf8').trim().split(/\r?\n/).filter(Boolean);
@@ -200,10 +208,22 @@ async function discoverBrowserEndpoint() {
     } catch {}
   }
 
-  for (const port of [9222, 9229, 9333]) {
+  for (const port of [Number(process.env.NEXURF_BROWSER_PORT || 0), 9333, 9222, 9229].filter(Boolean)) {
     if (await checkPort(port)) return { port, wsPath: null };
   }
 
+  return null;
+}
+
+async function fetchBrowserWsPath(port) {
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/json/version`, { signal: AbortSignal.timeout(2000) });
+    const data = await response.json();
+    if (data?.webSocketDebuggerUrl) {
+      const parsed = new URL(data.webSocketDebuggerUrl);
+      return parsed.pathname;
+    }
+  } catch {}
   return null;
 }
 
@@ -246,6 +266,7 @@ async function ensureConnection({ timeoutMs = CONNECT_TIMEOUT_MS } = {}) {
       browserWsPath = discovered.wsPath;
     }
 
+    if (!browserWsPath) browserWsPath = await fetchBrowserWsPath(browserPort);
     const wsUrl = getBrowserWsUrl(browserPort, browserWsPath);
     await new Promise((resolve, reject) => {
       let settled = false;
@@ -959,6 +980,169 @@ function guessImageExtension(resourceUrl = '') {
   return 'img';
 }
 
+
+function createTaskId() {
+  return `task_${crypto.randomUUID().slice(0, 8)}`;
+}
+
+function pushStep(task, name, status = 'ok', details = {}) {
+  task.steps.push({ name, status, at: new Date().toISOString(), ...details });
+}
+
+function stripForSummary(text = '', max = 2000) {
+  return String(text || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+async function matchProfileForTask(input = '') {
+  try {
+    const { spawnSync } = await import('node:child_process');
+    const result = spawnSync(process.execPath, ['runtime/profile-engine.mjs', input], { cwd: path.resolve(path.dirname(new URL(import.meta.url).pathname), '..'), encoding: 'utf8' });
+    const match = String(result.stdout || '').match(/site-profile:\s*([^\s]+)/);
+    return { ok: result.status === 0, name: match?.[1] || null, output: (result.stdout || '').slice(0, 4000) };
+  } catch (error) {
+    return { ok: false, name: null, error: error?.message || String(error) };
+  }
+}
+
+async function runTask(input = {}) {
+  const task = {
+    ok: true,
+    taskId: createTaskId(),
+    goal: input.goal || 'inspect-site',
+    input,
+    profile: null,
+    steps: [],
+    items: [],
+    resources: [],
+    warnings: [],
+    errors: [],
+    summaryReady: false,
+  };
+  const limit = Math.max(1, Math.min(Number(input.limit || 5), 20));
+  if (!input.url) {
+    task.ok = false;
+    task.errors.push({ code: 'bad_request', message: 'url is required' });
+    return task;
+  }
+  await ensureConnection();
+  const profile = await matchProfileForTask(`${input.url} ${input.goal || ''} ${input.hint || ''}`);
+  task.profile = profile;
+  pushStep(task, 'profile-match', profile.ok ? 'ok' : 'warn', { profile: profile.name });
+
+  async function withPage(targetUrl, fn) {
+    const response = await sendCommand('Target.createTarget', { url: targetUrl, background: true });
+    const targetId = response.result?.targetId;
+    if (!targetId) throw new Error('页面上下文创建失败');
+    const pageId = createPageId();
+    const sessionId = await attachToTarget(targetId);
+    pages.set(pageId, { targetId, sessionId, createdAt: new Date().toISOString() });
+    try {
+      await waitUntilReady(sessionId);
+      await ensureNavigated(sessionId, targetUrl).catch(() => null);
+      return await fn({ pageId, sessionId, targetId });
+    } finally {
+      await sendCommand('Target.closeTarget', { targetId }).catch(() => null);
+      pages.delete(pageId);
+    }
+  }
+
+  async function inspect(targetUrl) {
+    return withPage(targetUrl, async ({ sessionId, pageId }) => {
+      pushStep(task, 'open', 'ok', { url: targetUrl, pageId });
+      const snapshot = await pageSnapshot(sessionId);
+      const carrier = await detectContentCarrier(sessionId);
+      task.resources = carrier.alternativeResources || [];
+      task.summaryReady = true;
+      return { pageId, page: snapshot, carrier };
+    });
+  }
+
+  async function extractPage(targetUrl) {
+    return withPage(targetUrl, async ({ sessionId, pageId }) => {
+      pushStep(task, 'open', 'ok', { url: targetUrl, pageId });
+      const snapshot = await pageSnapshot(sessionId);
+      const carrier = await detectContentCarrier(sessionId);
+      pushStep(task, 'carrier', 'ok', { contentKind: carrier.contentKind, carrierKind: carrier.carrierKind, resourceIssue: carrier.resourceIssue || null });
+      const extraction = await extractContentFromCarrier(carrier, sessionId);
+      pushStep(task, 'extract', extraction?.ok ? 'ok' : 'warn', { contentKind: extraction?.contentKind || carrier.contentKind, reason: extraction?.reason || null });
+      task.resources = carrier.alternativeResources || [];
+      task.summaryReady = Boolean(extraction?.ok || carrier?.bodyText || carrier?.htmlBodyLength);
+      return { pageId, page: snapshot, carrier, extraction };
+    });
+  }
+
+  async function extractList(targetUrl) {
+    return withPage(targetUrl, async ({ sessionId, pageId }) => {
+      pushStep(task, 'open-list', 'ok', { url: targetUrl, pageId });
+      const response = await sendCommand('Runtime.evaluate', {
+        expression: `(() => {
+          const clean = s => (s || '').replace(/\\u00a0/g, ' ').replace(/\\s+/g, ' ').trim();
+          const bad = /^(首页|上一页|下一页|尾页|网站声明|专题归档|网站地图|政务微博|移动客户端|国家法律法规数据库|国务院政策文件库|解读\\d*)$/;
+          const links = Array.from(document.querySelectorAll('a')).map(a => ({
+            title: clean(a.innerText || a.textContent || a.title || ''),
+            url: a.href || '',
+            titleAttr: clean(a.title || '')
+          })).filter(x => x.url && x.title && !bad.test(x.title) && !/^javascript:/i.test(x.url));
+          const seen = new Set();
+          return links.filter(x => {
+            const key = x.title + '::' + x.url;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          }).slice(0, ${limit});
+        })()`,
+        returnByValue: true,
+      }, sessionId);
+      const links = response.result?.result?.value || [];
+      pushStep(task, 'list-items', 'ok', { count: links.length });
+      const items = [];
+      for (const link of links) {
+        try {
+          const detail = await extractPage(link.url);
+          items.push({
+            title: link.title,
+            url: link.url,
+            page: detail.page,
+            carrier: detail.carrier,
+            extraction: detail.extraction,
+            status: detail.extraction?.ok ? 'extracted' : (detail.carrier?.resourceIssue ? 'resource_issue' : 'metadata')
+          });
+        } catch (error) {
+          task.warnings.push({ code: 'item_failed', title: link.title, url: link.url, message: error?.message || String(error) });
+          items.push({ title: link.title, url: link.url, status: 'failed' });
+        }
+      }
+      task.items = items;
+      task.summaryReady = items.length > 0;
+      return { count: items.length, items };
+    });
+  }
+
+  try {
+    if (task.goal === 'inspect-site') {
+      task.result = await inspect(input.url);
+    } else if (task.goal === 'extract-page') {
+      task.result = await extractPage(input.url);
+    } else if (task.goal === 'extract-documents') {
+      const result = await extractPage(input.url);
+      task.result = result;
+      task.resources = result.carrier?.alternativeResources || [];
+    } else if (task.goal === 'extract-list') {
+      task.result = await extractList(input.url);
+    } else {
+      task.ok = false;
+      task.errors.push({ code: 'unsupported_goal', message: `Unsupported goal: ${task.goal}` });
+    }
+  } catch (error) {
+    task.ok = false;
+    task.errors.push({ code: 'task_failed', message: error?.message || String(error) });
+  }
+  task.summaryInput = task.items?.length
+    ? task.items.map((item, index) => `${index + 1}. ${item.title}\n${item.url}\n${stripForSummary(item.extraction?.contentText || item.carrier?.bodyText || '')}`).join('\n\n')
+    : stripForSummary(task.result?.extraction?.contentText || task.result?.carrier?.bodyText || task.result?.page?.title || '');
+  return task;
+}
+
 async function extractContentFromCarrier(carrier, sessionId = null) {
   const resourceUrl = carrier?.resourceUrl || '';
   const alternatives = carrier?.alternativeResources || [];
@@ -1394,6 +1578,18 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+
+    if (route === '/task') {
+      const { bodyText, bodyJson } = await getRequestPayload(req);
+      const payload = bodyJson && typeof bodyJson === 'object' ? bodyJson : {};
+      if (!payload.url) payload.url = url.searchParams.get('url') || bodyText || '';
+      if (!payload.goal) payload.goal = url.searchParams.get('goal') || 'inspect-site';
+      if (!payload.limit) payload.limit = url.searchParams.get('limit') || undefined;
+      const task = await runTask(payload);
+      json(res, task.ok ? 200 : 400, task);
+      return;
+    }
+
     if (route === '/close') {
       const pageId = url.searchParams.get('pageId') || url.searchParams.get('target');
       if (!pageId) return fail(res, 400, 'bad_request', 'pageId 是必填参数');
@@ -1421,6 +1617,7 @@ const server = http.createServer(async (req, res) => {
         '/scroll?target=&y=&direction=': 'GET - 滚动页面',
         '/screenshot?target=&file=': 'GET - 截图',
         '/setFiles?target=': 'POST body={selector,files} - 给 file input 设置文件',
+        '/task': 'POST body={url,goal,limit} - 执行网页任务',
       },
     });
   } catch (error) {

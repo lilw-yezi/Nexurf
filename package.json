@@ -1,6 +1,6 @@
 {
   "name": "nexurf",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Agent-native Web Runtime for dynamic browser access, content extraction, and reusable site profiles.",
   "license": "MIT",
   "type": "module",
@@ -18,9 +18,11 @@
     "test:scan": "node quality/smoke/scan-sensitive.mjs",
     "test:profile": "node quality/smoke/profile-smoke.mjs",
     "test:smoke": "node quality/smoke/runtime-smoke.mjs",
-    "test": "npm run test:syntax && npm run test:scan && npm run test:profile && npm run test:scenario && npm run test:carrier && npm run test:smoke",
+    "test": "npm run test:syntax && npm run test:scan && npm run test:profile && npm run test:scenario && npm run test:carrier && npm run test:task && npm run test:smoke",
     "test:scenario": "node quality/smoke/scenario-index-smoke.mjs",
-    "test:carrier": "node quality/smoke/carrier-automation-smoke.mjs"
+    "test:carrier": "node quality/smoke/carrier-automation-smoke.mjs",
+    "task": "node runtime/task.mjs",
+    "test:task": "node quality/smoke/task-smoke.mjs"
   },
   "engines": {
     "node": ">=22"
