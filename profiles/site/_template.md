@@ -1,25 +1,36 @@
 ---
 domain: example.com
-aliases: [示例站, Example]
-updated: 2026-04-17
+aliases: [Example, 示例站]
+updated: 2026-04-24
+status: template
 ---
 
-## 平台特征
-- 页面结构
-- 登录要求
-- 反爬/风控行为
-- 内容加载方式
+## Platform Type
+- Describe the platform category, such as news site, government notice site, document viewer, repository host, or social platform.
 
-## 有效入口
-- 稳定 URL 模式
-- 有效导航路径
-- 推荐交互方式
+## Content Carrier Pattern
+- Describe whether content usually lives in HTML, iframe, viewer, PDF, Office file, image, or dynamically rendered DOM.
 
-## 已知陷阱
-- 会失败的方式
-- 易误判的页面提示
-- 需要保留的参数或上下文
+## Effective Entry
+- Stable URL patterns
+- Recommended navigation path
+- Preferred Runtime API actions
 
-## 备注
-- 只记录验证过的事实
-- 标注日期，后续可更新
+## Known Traps
+- Failed access patterns
+- Parameter-loss risks
+- Login or anti-automation behavior
+- Misleading empty-page states
+
+## Parameter Preservation Rules
+- Query parameters that must be preserved
+- Natural in-page URLs that should not be manually shortened
+
+## Extraction Notes
+- Recommended carrier detection strategy
+- Recommended extraction or fallback path
+
+## Verification
+- Verified date
+- Verified scenario
+- Notes from real runs only; do not record guesses

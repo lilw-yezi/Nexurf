@@ -1,0 +1,26 @@
+{
+  "name": "nexurf",
+  "version": "1.0.0",
+  "description": "Agent-native Web Runtime for dynamic browser access, content extraction, and reusable site profiles.",
+  "license": "MIT",
+  "type": "module",
+  "private": false,
+  "bin": {
+    "nexurf-service": "./runtime/service.mjs",
+    "nexurf-doctor": "./runtime/doctor.mjs",
+    "nexurf-profile": "./runtime/profile-engine.mjs"
+  },
+  "scripts": {
+    "service": "node runtime/service.mjs",
+    "doctor": "node runtime/doctor.mjs",
+    "profile": "node runtime/profile-engine.mjs",
+    "test:syntax": "node quality/smoke/syntax-check.mjs",
+    "test:scan": "node quality/smoke/scan-sensitive.mjs",
+    "test:profile": "node quality/smoke/profile-smoke.mjs",
+    "test:smoke": "node quality/smoke/runtime-smoke.mjs",
+    "test": "npm run test:syntax && npm run test:scan && npm run test:profile && npm run test:smoke"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

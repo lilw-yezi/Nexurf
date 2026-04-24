@@ -26,6 +26,25 @@ Nexurf is organized as a reusable skill/runtime foundation for repeatable agent 
 - Route extraction by carrier type and content format
 - Accumulate reusable site profiles for future tasks
 
+## Quick Start
+
+```bash
+npm run doctor
+npm run test
+```
+
+Use the Runtime Service directly when needed:
+
+```bash
+npm run service
+```
+
+Match site profiles:
+
+```bash
+npm run profile -- "github pull request"
+```
+
 ## Usage
 
 Nexurf requires a locally running Chromium-based browser with remote debugging enabled. Before using Nexurf, complete the setup below.
@@ -114,6 +133,23 @@ Keeps thin compatibility entrypoints for older skill runners. New development sh
 - Embedded document extraction
 - Multi-format content retrieval
 - Reusable site operational knowledge accumulation
+
+## Testing
+
+Run all quality checks:
+
+```bash
+npm run test
+```
+
+Individual checks:
+
+```bash
+npm run test:syntax
+npm run test:scan
+npm run test:profile
+npm run test:smoke
+```
 
 ## License
 

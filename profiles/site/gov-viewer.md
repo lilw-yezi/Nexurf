@@ -2,24 +2,37 @@
 domain: gov-viewer
 aliases: [政务站, 政府网站, pdfjs, viewer, iframe, 规范性文件]
 updated: 2026-04-24
+status: verified-pattern
 ---
 
-## 平台特征
-- 政务详情页常见“主页面只放标题与元信息，正文在 iframe / viewer / PDF / OFD / Office 资源里”。
-- PDF viewer 常通过 `viewer.html?file=`、`filePath=`、`url=`、`src=` 等参数指向真实正文资源。
-- 直连下载可能因为 Referer、Cookie、412、防盗链等限制失败。
+## Platform Type
+- Government notice and policy-document pages.
 
-## 有效入口
-- 先读取主页面并保留完整 URL 参数。
-- 主 HTML 正文不足时，先跑 `/carrier` 识别 iframe、embed、object、viewer、候选附件。
-- PDF 直连失败时，优先用浏览器上下文 fetch 回退下载。
-- OFD / Office 优先找同页 PDF 或 HTML 预览替代资源。
+## Content Carrier Pattern
+- Detail pages often contain only title and metadata in the main DOM.
+- Full text may live in iframe, embedded viewer, PDF, OFD, Office attachment, or image scan.
+- PDF viewers often use `viewer.html?file=`, `filePath=`, `url=`, or `src=` to point to the real resource.
 
-## 已知陷阱
-- 主页面没有正文，不等于政策正文不存在。
-- 下载失败，不等于资源不存在。
-- 裁剪 query 参数很容易导致 viewer 空白或跳错资源。
-- 附件链接文字可能只写“下载 / 附件 / 查看”，需要结合 URL 后缀与 viewer 参数判断格式。
+## Effective Entry
+- Preserve the complete original URL.
+- Run `/carrier` when the main HTML body is short or missing.
+- Prefer browser-context download fallback when direct PDF download fails.
 
-## 备注
-- 该画像用于沉淀政务 viewer 类站点的通用行为，不代表单一域名。
+## Known Traps
+- Empty main DOM does not mean the document is absent.
+- Download failure does not mean the resource is absent.
+- Query-parameter trimming can break viewer resources.
+- Attachment link text may only say “download”, “attachment”, or “view”.
+
+## Parameter Preservation Rules
+- Preserve all query parameters from the original page and viewer URL.
+- Do not manually shorten `file`, `filePath`, `url`, or `src` values.
+
+## Extraction Notes
+- Prefer HTML extraction first when body text is sufficient.
+- If iframe/viewer is present, resolve the real resource URL.
+- Prefer PDF or HTML alternatives for OFD and Office resources.
+
+## Verification
+- Verified date: 2026-04-24
+- Verified scenario: policy/document pages with iframe or PDF viewer patterns.

@@ -1,22 +1,35 @@
 ---
 domain: xiaohongshu.com
-aliases: [小红书, xhs]
-updated: 2026-04-17
+aliases: [小红书, xhs, rednote]
+updated: 2026-04-24
+status: verified-pattern
 ---
 
-## 平台特征
-- 公开内容存在较强反爬与访问方式限制。
-- 仅依赖静态抓取时，常出现内容不完整或无法稳定读取。
-- 登录态与真实浏览器上下文通常更可靠。
+## Platform Type
+- Social content platform with strong dynamic rendering and access controls.
 
-## 有效入口
-- 优先通过真实浏览器页面进入目标内容。
-- 优先保留站内自然跳转得到的完整链接，不要手工裁剪参数。
+## Content Carrier Pattern
+- Content is usually dynamically rendered.
+- Login state and natural browser context are often more reliable than static reads.
 
-## 已知陷阱
-- 平台返回“内容不存在”不一定代表内容真的不存在，也可能是访问方式触发限制。
-- 手工拼接 URL 可能缺失必要上下文参数。
+## Effective Entry
+- Prefer opening the target in a real browser context.
+- Preserve the complete in-page URL produced by natural navigation.
+- Use inspection and screenshot when text extraction is incomplete.
 
-## 备注
-- 当前作为 Nexurf 的首个示例站点画像。
-- 后续在真实任务中继续补充更细的模式。
+## Known Traps
+- “Content not found” may indicate access context failure rather than true absence.
+- Manually constructed or shortened URLs may lose required context.
+- Static fetches may return incomplete or misleading content.
+
+## Parameter Preservation Rules
+- Preserve natural share and note URLs as observed in the browser.
+- Avoid trimming query parameters unless verified safe.
+
+## Extraction Notes
+- Prefer Runtime Service browser context.
+- Use scroll and screenshot fallback when DOM text is limited.
+
+## Verification
+- Verified date: 2026-04-24
+- Verified scenario: profile matching and operating guidance pattern.
